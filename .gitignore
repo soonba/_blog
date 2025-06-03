@@ -2,3 +2,5 @@ node_modules/
 hadoop/datanode1
 hadoop/datanode2
 hadoop/namenode
+paments/node_modules/**
+paments/locust/**
