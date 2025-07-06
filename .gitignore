@@ -3,3 +3,5 @@ hadoop/datanode1
 hadoop/datanode2
 hadoop/namenode
 better-sqlite/data.sqlite
+paments/node_modules/**
+paments/locust/**
