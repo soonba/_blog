@@ -1,0 +1,11 @@
+{
+  "name": "rate-limit",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0"
+  }
+}
