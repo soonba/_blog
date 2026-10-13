@@ -1,5 +1,3 @@
-// v2: 거절이면 false 대신 "몇 ms 뒤에 다시 와라"를 돌려준다. 통과면 0.
-
 // redis.incr(k)                 1 올리고 올린 뒤 값 반환 (키 없으면 0에서 시작)
 // redis.pexpire(k, ms)          ms 뒤 키 자동 삭제
 // redis.pttl(k)                 남은 수명 ms (-1: 만료 없음, -2: 키 없음)
@@ -10,14 +8,13 @@ const KEY = '나의몰:나의화주'
 const LIMIT = 2
 const WINDOW_MS = 1000
 
+// v2: 거절할 때 false 대신 "몇 ms 뒤에 다시 와라"를 돌려준다. 통과면 0.
 async function fixedWindow(nowMs: number): Promise<number> {
-  const window = Math.floor(nowMs / WINDOW_MS)
-
-  const redisKey = `${KEY}:${window}`
-  const cnt = await redis.incr(redisKey)
-  await redis.pexpire(redisKey, WINDOW_MS)
-  if (cnt > LIMIT) {
-    return window * WINDOW_MS + WINDOW_MS - nowMs
+  const windowIndex = Math.floor(nowMs / WINDOW_MS)
+  const redisKey = `${KEY}:${windowIndex}`
+  const count = await redis.incr(redisKey) //원자성 보장
+  if (count > LIMIT) {
+    return (windowIndex + 1) * WINDOW_MS - nowMs
   }
   return 0
 }

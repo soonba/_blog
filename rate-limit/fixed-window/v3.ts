@@ -1,5 +1,3 @@
-// v3: 창이 지난 키가 Redis 에 쌓이지 않게 한다. 판정 결과는 v2 와 같아야 한다.
-
 // redis.incr(k)                 1 올리고 올린 뒤 값 반환 (키 없으면 0에서 시작)
 // redis.pexpire(k, ms)          ms 뒤 키 자동 삭제
 // redis.pttl(k)                 남은 수명 ms (-1: 만료 없음, -2: 키 없음)
@@ -10,13 +8,14 @@ const KEY = '나의몰:나의화주'
 const LIMIT = 2
 const WINDOW_MS = 1000
 
+// v3: 지난 창의 키가 Redis 에 쌓이지 않게 한다. 판정 결과는 v2 와 같다.
 async function fixedWindow(nowMs: number): Promise<number> {
-  const window = Math.floor(nowMs / WINDOW_MS)
-
-  const redisKey = `${KEY}:${window}`
-  const cnt = await redis.incr(redisKey)
-  if (cnt > LIMIT) {
-    return window * WINDOW_MS + WINDOW_MS - nowMs
+  const windowIndex = Math.floor(nowMs / WINDOW_MS)
+  const redisKey = `${KEY}:${windowIndex}`
+  const count = await redis.incr(redisKey) //원자성 보장, redisKey는 무조건 있음
+  await redis.pexpire(redisKey, WINDOW_MS)
+  if (count > LIMIT) {
+    return (windowIndex + 1) * WINDOW_MS - nowMs
   }
   return 0
 }
@@ -46,7 +45,7 @@ for (const key of await redis.keys('*')) {
   const ttl = await redis.pttl(key)
   const ok = ttl > 0 && ttl <= WINDOW_MS
   if (!ok) fail++
-  console.log(ok ? '✓' : '✗', key, 'TTL', ttl, ok ? '' : '(만료 없음 → 영원히 남는다)')
+  console.log(ok ? '✓' : '✗', key, 'TTL', ttl)
 }
 console.log(fail === 0 ? '통과' : `${fail}개 틀림`)
 redis.disconnect()

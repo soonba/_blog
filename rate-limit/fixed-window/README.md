@@ -10,7 +10,7 @@ node fixed-window/v1.ts
 
 `fixedWindow(nowMs) → true(통과) | false(거절)`
 
-기대: `100 true · 200 true · 300 false · 1100 true · 1200 true · 1300 false`
+`node fixed-window/v1.ts` 가 `통과` 를 찍으면 끝.
 
 ## 다음 문제
 
